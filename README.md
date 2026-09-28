@@ -10,7 +10,7 @@ Run the notebook's three-image segmentation workflow as a web application. Choos
 
 ## Model and Workflow
 
-The application uses the pre-trained `u2net` model session from `rembg`. It loads the model once when the server starts and reuses the session.
+The application uses the pre-trained `u2net` model session from `rembg`. It starts one background model load when the server starts and reuses that session. This allows Uvicorn to open the Render port while weights download; the first image-processing request waits for the model to finish loading.
 
 Input image → PIL/Pillow RGB → U²-Net inference → predicted alpha mask → binary mask → foreground composited on white.
 
@@ -58,7 +58,7 @@ Open <http://127.0.0.1:8000>. The API documentation is at <http://127.0.0.1:8000
 | Method and path | Purpose |
 | --- | --- |
 | `GET /` | Serves the web application. |
-| `GET /health` | Returns application status and model name. |
+| `GET /health` | Returns application status, model name, and whether the model is still loading or ready. |
 | `POST /process-samples` | Processes the three built-in scikit-image sample images. |
 | `POST /process-upload` | Accepts one to three multipart files under the repeated field name `images`. |
 | `POST /process-urls` | Accepts JSON with exactly three URLs: `{"urls":["https://…/1.jpg","https://…/2.jpg","https://…/3.jpg"]}`. |

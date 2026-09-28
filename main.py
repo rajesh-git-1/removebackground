@@ -5,9 +5,11 @@ from __future__ import annotations
 import base64
 import io
 import ipaddress
+import logging
 import socket
 from contextlib import asynccontextmanager
 from pathlib import Path
+from threading import Event, Thread
 from typing import Annotated
 from urllib.parse import urlsplit
 
@@ -27,12 +29,39 @@ MAX_IMAGE_PIXELS = 25_000_000
 MAX_IMAGES = 3
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
+logger = logging.getLogger("uvicorn.error")
+
+
+def _load_model_session(app: FastAPI) -> None:
+    """Load U²-Net off the startup path so the web port can open immediately."""
+    try:
+        logger.info("Loading the %s model in the background.", MODEL_NAME)
+        app.state.model_session = new_session(MODEL_NAME)
+        logger.info("The %s model is ready.", MODEL_NAME)
+    except Exception as exc:
+        app.state.model_error = exc
+        logger.exception("Could not load the %s model.", MODEL_NAME)
+    finally:
+        app.state.model_ready.set()
+
+
+def _get_model_session():
+    # First inference waits while the single background load downloads and
+    # initializes the model. A timeout gives the caller a useful API error.
+    if not app.state.model_ready.wait(timeout=900):
+        raise HTTPException(status_code=503, detail="The model is still loading. Please try again shortly.")
+    if app.state.model_session is None:
+        raise HTTPException(status_code=503, detail="The model could not be loaded. Check the service logs and retry.")
+    return app.state.model_session
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Load once per server process and reuse the downloaded weights/session.
-    app.state.model_session = new_session(MODEL_NAME)
+    # Start loading once, without holding up Uvicorn's port binding.
+    app.state.model_session = None
+    app.state.model_error = None
+    app.state.model_ready = Event()
+    Thread(target=_load_model_session, args=(app,), name="u2net-loader", daemon=True).start()
     yield
 
 
@@ -47,7 +76,13 @@ def home() -> FileResponse:
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "model": MODEL_NAME}
+    if not app.state.model_ready.is_set():
+        model_status = "loading"
+    elif app.state.model_session is None:
+        model_status = "error"
+    else:
+        model_status = "ready"
+    return {"status": "ok", "model": MODEL_NAME, "model_status": model_status}
 
 
 class UrlRequest(BaseModel):
@@ -86,7 +121,7 @@ def _sample_images() -> list[tuple[str, Image.Image]]:
 def _segment_image(original: Image.Image) -> dict[str, str]:
     """Reuse segment_image's alpha extraction, threshold 128, and white composite."""
     try:
-        result_rgba = remove(original, session=app.state.model_session)
+        result_rgba = remove(original, session=_get_model_session())
         mask = np.array(result_rgba.split()[-1])
         binary_mask = (mask > 128).astype(np.uint8) * 255
         mask_3ch = np.dstack([binary_mask] * 3) / 255.0
