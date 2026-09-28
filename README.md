@@ -55,6 +55,7 @@ Open the local URL printed by Streamlit, normally <http://localhost:8501>.
 ## Troubleshooting
 
 - **Build fails while installing dependencies:** check the deployment build logs. If Python 3.11 is unavailable on the selected host, select a supported Python version and confirm the dependency versions in `requirements.txt` support it.
+- **Build log reports a timeout fetching `pypi.org/simple/jsonschema/`:** this is a package-index network timeout. `rembg` and `jsonschema` are pinned to avoid pip's long version backtracking; push the updated requirements and restart/reboot the app. If the log still shows a timeout, retry the deploy after PyPI is reachable from Community Cloud.
 - **First run appears stuck:** model download and initialization happen at first inference. Wait for the spinner and inspect app logs for network or memory errors.
 - **App restarts during inference:** use `u2netp`, upload fewer/smaller images, and avoid the full `u2net` model on a low-memory plan.
 - **A URL is rejected:** provide a direct public image URL with an `image/*` response. Private, local-network, redirected, or non-image URLs are intentionally blocked.
