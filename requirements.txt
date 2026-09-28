@@ -1,0 +1,9 @@
+fastapi>=0.115,<0.116
+uvicorn[standard]
+python-multipart
+pillow
+numpy
+scikit-image
+requests
+rembg
+onnxruntime

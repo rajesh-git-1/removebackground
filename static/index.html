@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Salient Object Detection using U²-Net</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/script.js" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">IMAGE SEGMENTATION</p>
+      <h1>Salient Object Detection using U²-Net</h1>
+      <p>Process three images with the pre-trained U²-Net model and view each segmentation mask and foreground.</p>
+    </header>
+
+    <section class="panel" aria-labelledby="source-title">
+      <h2 id="source-title">Choose how to provide your images</h2>
+      <fieldset class="source-options">
+        <legend class="sr-only">Image source</legend>
+        <label><input type="radio" name="source" value="samples" checked> Built-in PIL sample images</label>
+        <label><input type="radio" name="source" value="upload"> Upload from my system</label>
+        <label><input type="radio" name="source" value="urls"> Enter three image URLs</label>
+      </fieldset>
+
+      <form id="process-form">
+        <div id="samples-input" class="input-area">
+          <p class="input-title">Use the notebook's three sample images</p>
+          <p class="hint">Astronaut, cat, and coffee images are loaded from scikit-image and converted to PIL images on the server. No upload is needed.</p>
+        </div>
+        <div id="upload-input" class="input-area hidden">
+          <label for="image-files">Choose image files from your device</label>
+          <input id="image-files" type="file" accept="image/*" multiple>
+          <p class="hint">Select one to three images. Upload is required for this option. Maximum 10 MB per image.</p>
+        </div>
+        <div id="urls-input" class="input-area hidden">
+          <label for="image-url-1">Image URL 1</label>
+          <input id="image-url-1" type="url" placeholder="https://example.com/image-1.jpg" autocomplete="url">
+          <label for="image-url-2">Image URL 2</label>
+          <input id="image-url-2" type="url" placeholder="https://example.com/image-2.jpg" autocomplete="url">
+          <label for="image-url-3">Image URL 3</label>
+          <input id="image-url-3" type="url" placeholder="https://example.com/image-3.jpg" autocomplete="url">
+          <p class="hint">Paste three direct, publicly accessible HTTP or HTTPS image addresses.</p>
+        </div>
+        <button id="process-button" type="submit">Proceed</button>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section id="results" class="results hidden" aria-labelledby="results-title">
+      <h2 id="results-title">Processed Images</h2>
+      <div id="result-list" class="result-list"></div>
+    </section>
+    <footer>The pre-trained U²-Net model is loaded once when the server starts. First startup may take longer while the model is downloaded and loaded.</footer>
+  </main>
+</body>
+</html>
