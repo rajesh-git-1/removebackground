@@ -1,9 +1,7 @@
-fastapi>=0.115,<0.116
-uvicorn[standard]
-python-multipart
-pillow
-numpy
-scikit-image
-requests
-rembg
-onnxruntime
+streamlit>=1.40,<2
+rembg[cpu]>=2.0.60,<3
+onnxruntime>=1.19,<2
+pillow>=10,<13
+numpy>=1.26,<3
+scikit-image>=0.24,<1
+requests>=2.32,<3
