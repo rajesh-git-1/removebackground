@@ -1,3 +1,5 @@
+# the deployed url(deployed through streamlit) : https://removebackground-2ysg2ux7xkye5ifwsv2dgx.streamlit.app/
+
 # Salient Object Detection with U²-Net
 
 Streamlit app for salient foreground extraction with the pre-trained `rembg` U²-Net models. For each image it displays the original, a binary mask using the notebook's strict `alpha > 128` threshold, and the foreground composited on white.
